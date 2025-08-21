@@ -7,26 +7,22 @@ class RedmineTools < Formula
   on_macos do
     if Hardware::CPU.arm?
       url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.0/redmine-tools-darwin-arm64.tar.gz"
-      sha256 "b4f30114254b0182552fa1574ace5b9baac5852b574b2f67a2a9cc0a24d8f1c8
-fda620becbd5b8b22aa54086d964bac665fa621129940e3b7fafc659d20f6e8f"
+      sha256 "f2fffa2473a4fd1defad5e9962f65202cabe629207e74264b63e262c96c5487b"
     end
     if Hardware::CPU.intel?
       url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.0/redmine-tools-darwin-amd64.tar.gz"
-      sha256 "cf2aa28a51db1af3583dc6eb74c567b6309f12ea7899abaad6c94776acccf916
-618a9fbd68d554e29677cb090e2bd3ba335699ae9a392aa823600830181b2c7b"
+      sha256 "26b5488a908b18e27b8e420beeda70ff73f5d9bc7442a045999e813faaab8a3e"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm? && Hardware::CPU.arch_64_bit?
       url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.0/redmine-tools-linux-arm64.tar.gz"
-      sha256 "3f610b707add0d415a704bcdf72aa39ad956b3fc93f171e65d00d31737dd1ae1
-e45faa3c9be282109eadad91dc34d18c548e3c5fb2f4991fe92f459ee9dfd0d2"
+      sha256 "815e8c2d3a0aa2f3007a52eb86a17c448435e6461032b24761d464100d80f990"
     end
     if Hardware::CPU.intel?
       url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.0/redmine-tools-linux-amd64.tar.gz"
-      sha256 "b0210eb9f327805250ef3da4df71641ad6bc47ff55845ded2c8015cb38f988da
-e7cd4da27cf4d36125548915e8d906a106e6b821f0af6555f477ca4ee3eee98f"
+      sha256 "6799eaeb30b5851605a9849b5953f97edfae4208be9fc08a6b6ec20d036e6cb3"
     end
   end
 
