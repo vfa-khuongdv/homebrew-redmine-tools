@@ -1,32 +1,32 @@
 class RedmineTools < Formula
   desc "Command-line tool for working with Redmine projects"
   homepage "https://github.com/vfa-khuongdv/homebrew-redmine-tools"
-  version "1.0.4"
+  version "1.0.0"
   license "MIT"
 
   on_macos do
     if Hardware::CPU.arm?
-      url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.4/redmine-tools-darwin-arm64.tar.gz"
-      sha256 "1d3d743af02b76cf8aca8357751d086597788b27d4940e2dabc8dca5b110a109
-777485b6dedd07f67fa4a43153d7bbba52f784664240e89188f680e4bd86e377"
+      url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.0/redmine-tools-darwin-arm64.tar.gz"
+      sha256 "027190a8168d459bca421cbe861208f55297b828c818f8b1d9abd9cec24eb6ef
+fd10686678a41dfb15188aaa8045ec3c3a595847c0efa36da533f499ec6f69f5"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.4/redmine-tools-darwin-amd64.tar.gz"
-      sha256 "42c704671c3fa7c7d2c47b242cd879a9d36d50e81d9232cc1f910b10f57b06ad
-eef917955b4735bd09678369c53ac036b95b6acb99ffd1722d8f0cf2162ba509"
+      url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.0/redmine-tools-darwin-amd64.tar.gz"
+      sha256 "15274ba4f40dbaf0ec7e976dc99f11cd8e88151f4d73f1b10fb48535fa86fffc
+665a38a3aa6097dfc9826842c453d41d32d7a7ea555b6f90f61569dd9ff85df4"
     end
   end
 
   on_linux do
     if Hardware::CPU.arm? && Hardware::CPU.arch_64_bit?
-      url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.4/redmine-tools-linux-arm64.tar.gz"
-      sha256 "79be2329007eb11de902d334f921d58fd6b82129feb6158cbc8a7c932ab84243
-476b7136f1dd51318eee3cfbd650f3d7030b4c1e88f4c2b149f713b75135d2e7"
+      url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.0/redmine-tools-linux-arm64.tar.gz"
+      sha256 "22267687891a34b8092a435930bb17460a949d31df07cf6fe238ecbf34ec8211
+b35e1e27048641b6e9e4b2acf799a3dfad0bf513c25e1c93feeec1ee3b42a27b"
     end
     if Hardware::CPU.intel?
-      url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.4/redmine-tools-linux-amd64.tar.gz"
-      sha256 "99056f3e3fe9d93f33fe7130bc319f30beff526e87deb42aac90184d80fd96ca
-79888c10202055ab403fc7dd5075370724d17e6294eea3358db0693c9f8d6d75"
+      url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/v1.0.0/redmine-tools-linux-amd64.tar.gz"
+      sha256 "015580a21a20d3696b2136807f4f289982f41d1842b7fa215f947cb64e1dcce0
+a12182fc134413b8b8f89940d2424dfee18bf6a31253fec4cede70956fab4d5f"
     end
   end
 
