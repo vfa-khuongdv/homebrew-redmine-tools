@@ -49,9 +49,16 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        # Configure git with token for authentication
+        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        
         # Clone the homebrew tap repo
         git clone https://github.com/vfa-khuongdv/homebrew-redmine-tools.git homebrew-tap
         cd homebrew-tap
+        
+        # Set up git user for commits
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
         
         # Create formula update script
         cat > update_formula.sh << 'EOF'
@@ -110,8 +117,6 @@ jobs:
         EOL
         
         # Commit and push
-        git config user.name "GitHub Actions"
-        git config user.email "actions@github.com"
         git add redmine-tools.rb
         git commit -m "Update redmine-tools to ${VERSION}"
         git push
