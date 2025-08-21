@@ -49,7 +49,7 @@ jobs:
         # Create formula update script
         cat > update_formula.sh << 'EOF'
         #!/bin/bash
-        REPO="khuongdv/homebrew-redmine-tools"
+        REPO="vfa-khuongdv/homebrew-redmine-tools"
         VERSION="${{ steps.get_version.outputs.VERSION }}"
         SHA256="$1"
         
@@ -61,8 +61,8 @@ jobs:
         cat > redmine-tools.rb << EOL
         class RedmineTools < Formula
           desc "Command-line tool for working with Redmine projects"
-          homepage "https://github.com/khuongdv/redmine-tools"
-          url "https://github.com/khuongdv/redmine-tools/releases/download/${VERSION}/redmine-tools-darwin-arm64.tar.gz"
+          homepage "https://github.com/vfa-khuongdv/redmine-tools"
+          url "https://github.com/vfa-khuongdv/redmine-tools/releases/download/${VERSION}/redmine-tools-darwin-arm64.tar.gz"
           sha256 "${SHA256}"
           version "${VERSION#v}"
         

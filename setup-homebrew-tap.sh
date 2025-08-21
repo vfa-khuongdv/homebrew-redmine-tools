@@ -52,7 +52,7 @@ if [ ! -d ".git" ]; then
     echo -e "${GREEN}✅ Homebrew tap repository created!${NC}"
     echo -e "${YELLOW}📋 Next steps:${NC}"
     echo "1. Create a GitHub repository named 'homebrew-redmine-tools'"
-    echo "2. Add the remote: git remote add origin https://github.com/khuongdv/homebrew-redmine-tools.git"
+    echo "2. Add the remote: git remote add origin https://github.com/vfa-khuongdv/homebrew-redmine-tools.git"
     echo "3. Push: git push -u origin main"
     echo "4. Create a release of your main project to get proper SHA256"
     echo "5. Update the formula with correct URL and SHA256"

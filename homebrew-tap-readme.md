@@ -1,11 +1,11 @@
 # Homebrew Tap for Redmine Tools
 
-This is the official Homebrew tap for [redmine-tools](https://github.com/khuongdv/redmine-tools).
+This is the official Homebrew tap for [redmine-tools](https://github.com/vfa-khuongdv/redmine-tools).
 
 ## Installation
 
 ```bash
-brew tap khuongdv/redmine-tools
+brew tap vfa-khuongdv/redmine-tools
 brew install redmine-tools
 ```
 

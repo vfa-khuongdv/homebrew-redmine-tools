@@ -74,12 +74,12 @@ echo -e "${GREEN}✅ Tag $VERSION created and pushed${NC}"
 # Step 3: Wait for GitHub Actions (if applicable)
 echo -e "${YELLOW}3️⃣ Waiting for GitHub release to be created...${NC}"
 echo -e "${BLUE}Please wait for GitHub Actions to complete the release build.${NC}"
-echo -e "${BLUE}Check: https://github.com/khuongdv/redmine-tools/releases${NC}"
+echo -e "${BLUE}Check: https://github.com/vfa-khuongdv/redmine-tools/releases${NC}"
 read -p "Press Enter when the release is available on GitHub..."
 
 # Step 4: Calculate SHA256
 echo -e "${YELLOW}4️⃣ Calculating SHA256 for release archive...${NC}"
-ARCHIVE_URL="https://github.com/khuongdv/redmine-tools/archive/$VERSION.tar.gz"
+ARCHIVE_URL="https://github.com/vfa-khuongdv/redmine-tools/archive/$VERSION.tar.gz"
 echo -e "${BLUE}Downloading: $ARCHIVE_URL${NC}"
 
 SHA256=$(curl -sL "$ARCHIVE_URL" | shasum -a 256 | cut -d ' ' -f 1)
@@ -98,8 +98,8 @@ fi
 cat > "$HOMEBREW_TAP_DIR/redmine-tools.rb" << EOF
 class RedmineTools < Formula
   desc "Command-line tool for working with Redmine projects"
-  homepage "https://github.com/khuongdv/redmine-tools"
-  url "https://github.com/khuongdv/redmine-tools/archive/$VERSION.tar.gz"
+  homepage "https://github.com/vfa-khuongdv/redmine-tools"
+  url "https://github.com/vfa-khuongdv/redmine-tools/archive/$VERSION.tar.gz"
   sha256 "$SHA256"
   license "MIT"
 
@@ -131,7 +131,7 @@ if git remote get-url origin >/dev/null 2>&1; then
     echo -e "${GREEN}✅ Formula pushed to GitHub${NC}"
 else
     echo -e "${YELLOW}⚠️  Remote 'origin' not configured. Please set up your GitHub repository:${NC}"
-    echo "git remote add origin https://github.com/khuongdv/homebrew-redmine-tools.git"
+    echo "git remote add origin https://github.com/vfa-khuongdv/homebrew-redmine-tools.git"
     echo "git push -u origin main"
 fi
 
@@ -145,8 +145,8 @@ echo -e "${GREEN}✅ SHA256 calculated: $SHA256${NC}"
 echo -e "${GREEN}✅ Formula updated and committed${NC}"
 echo ""
 echo -e "${YELLOW}📋 Next steps:${NC}"
-echo "1. Verify the release at: https://github.com/khuongdv/redmine-tools/releases"
-echo "2. Test installation: brew tap khuongdv/redmine-tools && brew install redmine-tools"
+echo "1. Verify the release at: https://github.com/vfa-khuongdv/redmine-tools/releases"
+echo "2. Test installation: brew tap vfa-khuongdv/redmine-tools && brew install redmine-tools"
 echo "3. Test the tool: redmine-tools --version"
 echo ""
 echo -e "${BLUE}🍺 Your tool should now be available via Homebrew!${NC}"

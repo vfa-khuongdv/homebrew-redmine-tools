@@ -1,7 +1,7 @@
 class RedmineTools < Formula
   desc "Command-line tool for working with Redmine projects"
-  homepage "https://github.com/khuongdv/redmine-tools"
-  url "https://github.com/khuongdv/redmine-tools/archive/v1.0.0.tar.gz"
+  homepage "https://github.com/vfa-khuongdv/redmine-tools"
+  url "https://github.com/vfa-khuongdv/redmine-tools/archive/v1.0.0.tar.gz"
   sha256 "0000000000000000000000000000000000000000000000000000000000000000"
   license "MIT"
 

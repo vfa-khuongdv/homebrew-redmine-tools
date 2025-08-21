@@ -14,14 +14,14 @@ A command-line tool for working with Redmine projects, built with Go.
 ### Using Homebrew
 
 ```bash
-brew tap khuongdv/redmine-tools
+brew tap vfa-khuongdv/redmine-tools
 brew install redmine-tools
 ```
 
 ### From Source
 
 ```bash
-go install github.com/khuongdv/redmine-tools/cmd@latest
+go install github.com/vfa-khuongdv/redmine-tools/cmd@latest
 ```
 
 ## Usage

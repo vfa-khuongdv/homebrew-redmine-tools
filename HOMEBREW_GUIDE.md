@@ -4,8 +4,8 @@ This guide will help you publish your `redmine-tools` application to Homebrew.
 
 ## Prerequisites
 
-1. Your main project repository: `https://github.com/khuongdv/redmine-tools`
-2. Your Homebrew tap repository: `https://github.com/khuongdv/homebrew-redmine-tools`
+1. Your main project repository: `https://github.com/vfa-khuongdv/redmine-tools`
+2. Your Homebrew tap repository: `https://github.com/vfa-khuongdv/homebrew-redmine-tools`
 
 ## Step-by-Step Process
 
@@ -33,7 +33,7 @@ git push origin main
 
 ```bash
 cd ../homebrew-redmine-tools
-git remote add origin https://github.com/khuongdv/homebrew-redmine-tools.git
+git remote add origin https://github.com/vfa-khuongdv/homebrew-redmine-tools.git
 git branch -M main
 git push -u origin main
 ```
@@ -61,7 +61,7 @@ After the release is created:
 
 ```bash
 # Get the SHA256 of the release archive
-curl -L https://github.com/khuongdv/redmine-tools/archive/v1.0.0.tar.gz | shasum -a 256
+curl -L https://github.com/vfa-khuongdv/redmine-tools/archive/v1.0.0.tar.gz | shasum -a 256
 ```
 
 2. Update the formula in your homebrew tap repository:
@@ -69,8 +69,8 @@ curl -L https://github.com/khuongdv/redmine-tools/archive/v1.0.0.tar.gz | shasum
 ```ruby
 class RedmineTools < Formula
   desc "Command-line tool for working with Redmine projects"
-  homepage "https://github.com/khuongdv/redmine-tools"
-  url "https://github.com/khuongdv/redmine-tools/archive/v1.0.0.tar.gz"
+  homepage "https://github.com/vfa-khuongdv/redmine-tools"
+  url "https://github.com/vfa-khuongdv/redmine-tools/archive/v1.0.0.tar.gz"
   sha256 "YOUR_ACTUAL_SHA256_HERE"
   license "MIT"
 
@@ -102,7 +102,7 @@ Test that your formula works:
 
 ```bash
 # Install your tap locally
-brew tap khuongdv/redmine-tools
+brew tap vfa-khuongdv/redmine-tools
 
 # Install your tool
 brew install redmine-tools
