@@ -1,0 +1,88 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        fetch-depth: 0
+
+    - name: Set up Go
+      uses: actions/setup-go@v4
+      with:
+        go-version: '1.25'
+
+    - name: Get the version
+      id: get_version
+      run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+    - name: Build binaries
+      run: |
+        make release VERSION=${{ steps.get_version.outputs.VERSION }}
+        make archives VERSION=${{ steps.get_version.outputs.VERSION }}
+
+    - name: Create Release
+      uses: softprops/action-gh-release@v1
+      with:
+        files: build/*.tar.gz,build/*.zip
+        generate_release_notes: true
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Update Homebrew formula
+      if: startsWith(github.ref, 'refs/tags/v')
+      run: |
+        # Calculate SHA256 for macOS ARM64 binary (most common for Homebrew)
+        SHA256=$(shasum -a 256 build/redmine-tools-darwin-arm64.tar.gz | cut -d ' ' -f 1)
+        echo "SHA256: $SHA256"
+        
+        # Create formula update script
+        cat > update_formula.sh << 'EOF'
+        #!/bin/bash
+        REPO="khuongdv/homebrew-redmine-tools"
+        VERSION="${{ steps.get_version.outputs.VERSION }}"
+        SHA256="$1"
+        
+        # Clone the homebrew tap repo
+        git clone https://github.com/$REPO.git homebrew-tap
+        cd homebrew-tap
+        
+        # Update the formula
+        cat > redmine-tools.rb << EOL
+        class RedmineTools < Formula
+          desc "Command-line tool for working with Redmine projects"
+          homepage "https://github.com/khuongdv/redmine-tools"
+          url "https://github.com/khuongdv/redmine-tools/releases/download/${VERSION}/redmine-tools-darwin-arm64.tar.gz"
+          sha256 "${SHA256}"
+          version "${VERSION#v}"
+        
+          def install
+            bin.install "redmine-tools-darwin-arm64" => "redmine-tools"
+          end
+        
+          test do
+            system "#{bin}/redmine-tools", "--version"
+          end
+        end
+        EOL
+        
+        # Commit and push
+        git config user.name "GitHub Actions"
+        git config user.email "actions@github.com"
+        git add redmine-tools.rb
+        git commit -m "Update redmine-tools to ${VERSION}"
+        git push
+        EOF
+        
+        chmod +x update_formula.sh
+        echo "Formula update script created. SHA256: $SHA256"
