@@ -65,21 +65,47 @@ fi
 
 # Step 2: Create and push tag
 echo -e "${YELLOW}2️⃣ Creating and pushing tag $VERSION...${NC}"
-git tag "$VERSION" || echo -e "${YELLOW}⚠️  Tag $VERSION already exists${NC}"
-git push origin main
-git push origin "$VERSION" || echo -e "${YELLOW}⚠️  Tag $VERSION already pushed${NC}"
 
-echo -e "${GREEN}✅ Tag $VERSION created and pushed${NC}"
+# Check if tag already exists locally
+if git rev-parse "$VERSION" >/dev/null 2>&1; then
+    echo -e "${YELLOW}⚠️  Tag $VERSION already exists locally${NC}"
+else
+    git tag "$VERSION"
+    echo -e "${GREEN}✅ Tag $VERSION created locally${NC}"
+fi
+
+# Push main branch first
+git push origin main
+
+# Try to push tag, handle the workflow scope issue gracefully
+if git push origin "$VERSION" 2>&1 | grep -q "workflow.*scope"; then
+    echo -e "${YELLOW}⚠️  Personal Access Token lacks 'workflow' scope${NC}"
+    echo -e "${YELLOW}📋 To fix this issue:${NC}"
+    echo "   1. Go to https://github.com/settings/tokens"
+    echo "   2. Edit your token to include 'workflow' scope"
+    echo "   3. Or manually create the release on GitHub:"
+    echo "      - Go to https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases"
+    echo "      - Click 'Create a new release'"
+    echo "      - Use tag: $VERSION"
+    echo "      - Let GitHub Actions build the release"
+    echo ""
+    read -p "Press Enter after you've created the release manually or updated your token..."
+    
+    # Try pushing tag again
+    git push origin "$VERSION" || echo -e "${YELLOW}⚠️  Tag push failed, but continuing with manual release${NC}"
+else
+    echo -e "${GREEN}✅ Tag $VERSION pushed successfully${NC}"
+fi
 
 # Step 3: Wait for GitHub Actions (if applicable)
 echo -e "${YELLOW}3️⃣ Waiting for GitHub release to be created...${NC}"
 echo -e "${BLUE}Please wait for GitHub Actions to complete the release build.${NC}"
-echo -e "${BLUE}Check: https://github.com/vfa-khuongdv/redmine-tools/releases${NC}"
+echo -e "${BLUE}Check: https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases${NC}"
 read -p "Press Enter when the release is available on GitHub..."
 
 # Step 4: Calculate SHA256
 echo -e "${YELLOW}4️⃣ Calculating SHA256 for release archive...${NC}"
-ARCHIVE_URL="https://github.com/vfa-khuongdv/redmine-tools/archive/$VERSION.tar.gz"
+ARCHIVE_URL="https://github.com/vfa-khuongdv/homebrew-redmine-tools/archive/$VERSION.tar.gz"
 echo -e "${BLUE}Downloading: $ARCHIVE_URL${NC}"
 
 SHA256=$(curl -sL "$ARCHIVE_URL" | shasum -a 256 | cut -d ' ' -f 1)
@@ -98,8 +124,8 @@ fi
 cat > "$HOMEBREW_TAP_DIR/redmine-tools.rb" << EOF
 class RedmineTools < Formula
   desc "Command-line tool for working with Redmine projects"
-  homepage "https://github.com/vfa-khuongdv/redmine-tools"
-  url "https://github.com/vfa-khuongdv/redmine-tools/archive/$VERSION.tar.gz"
+  homepage "https://github.com/vfa-khuongdv/homebrew-redmine-tools"
+  url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/archive/$VERSION.tar.gz"
   sha256 "$SHA256"
   license "MIT"
 
@@ -145,7 +171,7 @@ echo -e "${GREEN}✅ SHA256 calculated: $SHA256${NC}"
 echo -e "${GREEN}✅ Formula updated and committed${NC}"
 echo ""
 echo -e "${YELLOW}📋 Next steps:${NC}"
-echo "1. Verify the release at: https://github.com/vfa-khuongdv/redmine-tools/releases"
+echo "1. Verify the release at: https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases"
 echo "2. Test installation: brew tap vfa-khuongdv/redmine-tools && brew install redmine-tools"
 echo "3. Test the tool: redmine-tools --version"
 echo ""
