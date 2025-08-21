@@ -1,0 +1,12 @@
+# Alternative using actions/checkout
+- name: Checkout homebrew tap
+  uses: actions/checkout@v4
+  with:
+    repository: vfa-khuongdv/homebrew-redmine-tools
+    token: ${{ secrets.GITHUB_TOKEN }}
+    path: homebrew-tap
+
+- name: Update formula
+  run: |
+    cd homebrew-tap
+    # Your update logic here
