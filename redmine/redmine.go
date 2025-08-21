@@ -2,12 +2,12 @@ package redmine
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
-
-	progressbar "github.com/schollz/progressbar/v3"
+	"strings"
 )
 
 type Status struct {
@@ -16,11 +16,51 @@ type Status struct {
 }
 
 type Issue struct {
-	ID    int    `json:"id"`
-	Title string `json:"subject"`
+	ID      int    `json:"id"`
+	Title   string `json:"subject"`
+	Status  struct {
+		ID   int    `json:"id"`
+		Name string `json:"name"`
+	} `json:"status"`
+	Project struct {
+		ID         int    `json:"id"`
+		Name       string `json:"name"`
+		Identifier string `json:"identifier"`
+	} `json:"project"`
 }
 
-func GetStatuses(domain, apiKey string) ([]Status, error) {
+type AuthConfig struct {
+	AuthType string
+	APIKey   string
+	Username string
+	Password string
+}
+
+func (ac *AuthConfig) SetAuth(req *http.Request) {
+	if req == nil {
+		return
+	}
+	
+	// Set API Key if available
+	if ac.APIKey != "" {
+		req.Header.Set("X-Redmine-API-Key", ac.APIKey)
+	}
+	
+	// Set Basic Auth if configured
+	if ac.AuthType == "basic_auth" && ac.Username != "" && ac.Password != "" {
+		auth := base64.StdEncoding.EncodeToString([]byte(ac.Username + ":" + ac.Password))
+		req.Header.Set("Authorization", "Basic "+auth)
+	} else if ac.AuthType == "both" && ac.Username != "" && ac.Password != "" {
+		// Support for using both API Key and Basic Auth simultaneously
+		auth := base64.StdEncoding.EncodeToString([]byte(ac.Username + ":" + ac.Password))
+		req.Header.Set("Authorization", "Basic "+auth)
+	}
+}
+
+func GetStatuses(domain string, auth *AuthConfig) ([]Status, error) {
+	// Clean domain to avoid double slashes and remove any whitespace/control characters
+	domain = strings.TrimSpace(strings.TrimSuffix(domain, "/"))
+
 	// Thử các endpoint khác nhau của Redmine API
 	endpoints := []string{
 		"%s/issue_statuses.json",
@@ -32,8 +72,12 @@ func GetStatuses(domain, apiKey string) ([]Status, error) {
 		url := fmt.Sprintf(endpoint, domain)
 		fmt.Printf("Thử endpoint %d: %s\n", i+1, url)
 
-		req, _ := http.NewRequest("GET", url, nil)
-		req.Header.Set("X-Redmine-API-Key", apiKey)
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			fmt.Printf("Lỗi tạo request: %v\n", err)
+			continue
+		}
+		auth.SetAuth(req)
 		resp, err := http.DefaultClient.Do(req)
 		if err != nil {
 			fmt.Printf("Lỗi kết nối: %v\n", err)
@@ -85,50 +129,95 @@ func GetStatuses(domain, apiKey string) ([]Status, error) {
 	return nil, fmt.Errorf("không thể lấy danh sách status từ bất kỳ endpoint nào")
 }
 
-func GetIssues(domain, apiKey, projectKey string, startID, endID int) ([]Issue, error) {
-	// Redmine không hỗ trợ filter theo range ID, nên cần gọi từng ID
-	var issues []Issue
-	total := endID - startID + 1
+func GetIssues(domain string, auth *AuthConfig, projectKey string, startID, endID int) ([]Issue, error) {
+	// Clean domain to avoid double slashes and remove any whitespace/control characters
+	domain = strings.TrimSpace(strings.TrimSuffix(domain, "/"))
 
-	// Tạo progress bar
-	bar := progressbar.NewOptions(total,
-		progressbar.OptionSetDescription("🎣 Đang câu ticket nè..."),
-		progressbar.OptionSetWidth(30),
-		progressbar.OptionShowCount(),
-		progressbar.OptionShowIts(),
-		progressbar.OptionSetItsString("ticket"),
-	)
+	var allIssues []Issue
+	offset := 0
+	limit := 100 // Redmine default limit
+	
+	fmt.Printf("🔍 Fetching ALL issues from project '%s'...\n", projectKey)
 
-	for id := startID; id <= endID; id++ {
-		url := fmt.Sprintf("%s/issues/%d.json", domain, id)
-		req, _ := http.NewRequest("GET", url, nil)
-		req.Header.Set("X-Redmine-API-Key", apiKey)
+	for {
+		// Use Redmine's issues API with project filter
+		url := fmt.Sprintf("%s/issues.json?project_id=%s&offset=%d&limit=%d", 
+			domain, projectKey, offset, limit)
+		
+		fmt.Printf("📡 Calling API: %s\n", url)
+		
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return nil, fmt.Errorf("error creating request: %v", err)
+		}
+		
+		auth.SetAuth(req)
 		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, fmt.Errorf("error making request: %v", err)
+		}
 
-		// Update progress bar
-		bar.Add(1)
+		if resp.StatusCode != 200 {
+			body, _ := io.ReadAll(resp.Body)
+			resp.Body.Close()
+			return nil, fmt.Errorf("HTTP %d: %s", resp.StatusCode, string(body))
+		}
 
-		if err != nil || resp.StatusCode != 200 {
-			if resp != nil {
-				resp.Body.Close()
-			}
-			continue
+		body, err := io.ReadAll(resp.Body)
+		resp.Body.Close()
+		if err != nil {
+			return nil, fmt.Errorf("error reading response: %v", err)
 		}
 
 		var result struct {
-			Issue Issue `json:"issue"`
+			Issues     []Issue `json:"issues"`
+			TotalCount int     `json:"total_count"`
+			Offset     int     `json:"offset"`
+			Limit      int     `json:"limit"`
 		}
-		if err := json.NewDecoder(resp.Body).Decode(&result); err == nil {
-			issues = append(issues, result.Issue)
+
+		if err := json.Unmarshal(body, &result); err != nil {
+			return nil, fmt.Errorf("error parsing JSON: %v", err)
 		}
-		resp.Body.Close()
+
+		fmt.Printf("� Retrieved %d issues (offset: %d, total: %d)\n", 
+			len(result.Issues), result.Offset, result.TotalCount)
+
+		// Filter issues by ID range
+		for _, issue := range result.Issues {
+			if issue.ID >= startID && issue.ID <= endID {
+				allIssues = append(allIssues, issue)
+			}
+		}
+
+		// Check if we have more pages
+		if len(result.Issues) < limit || offset+limit >= result.TotalCount {
+			break
+		}
+		
+		offset += limit
 	}
 
-	fmt.Printf("\n🎉 Yay! Tìm được %d ticket rồi bestie!\n", len(issues))
-	return issues, nil
+	// Filter issues that are in the specified ID range
+	var filteredIssues []Issue
+	for _, issue := range allIssues {
+		if issue.ID >= startID && issue.ID <= endID {
+			filteredIssues = append(filteredIssues, issue)
+		}
+	}
+
+	fmt.Printf("\n📊 Summary:\n")
+	fmt.Printf("   - Total issues in project '%s': %d\n", projectKey, len(allIssues))
+	fmt.Printf("   - Issues in ID range %d-%d: %d\n", startID, endID, len(filteredIssues))
+	
+	fmt.Printf("\n🎉 Found %d issues in the specified range!\n", len(filteredIssues))
+	return filteredIssues, nil
 }
 
-func UpdateIssueStatus(domain, apiKey string, issueID, statusID int) error {
+func UpdateIssueStatus(domain string, auth *AuthConfig, issueID, statusID int) error {
+	// Clean domain to avoid double slashes and remove any whitespace/control characters
+	domain = strings.TrimSpace(strings.TrimSuffix(domain, "/"))
+
 	url := fmt.Sprintf("%s/issues/%d.json", domain, issueID)
 	body := map[string]interface{}{
 		"issue": map[string]interface{}{
@@ -136,8 +225,11 @@ func UpdateIssueStatus(domain, apiKey string, issueID, statusID int) error {
 		},
 	}
 	jsonBody, _ := json.Marshal(body)
-	req, _ := http.NewRequest("PUT", url, bytes.NewBuffer(jsonBody))
-	req.Header.Set("X-Redmine-API-Key", apiKey)
+	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(jsonBody))
+	if err != nil {
+		return fmt.Errorf("lỗi tạo request: %v", err)
+	}
+	auth.SetAuth(req)
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {

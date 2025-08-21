@@ -20,6 +20,32 @@ func PromptInput(label string) string {
 	return result
 }
 
+func PromptPassword(label string) string {
+	prompt := promptui.Prompt{
+		Label: label,
+		Mask:  '*',
+	}
+	result, err := prompt.Run()
+	if err != nil {
+		fmt.Println("\n🥺 Huhu cancel rồi à? Okela bye bestie!")
+		os.Exit(0)
+	}
+	return result
+}
+
+func PromptSelect(label string, options []string) int {
+	prompt := promptui.Select{
+		Label: label,
+		Items: options,
+	}
+	index, _, err := prompt.Run()
+	if err != nil {
+		fmt.Println("\n🥺 Huhu cancel rồi à? Okela bye bestie!")
+		os.Exit(0)
+	}
+	return index
+}
+
 func PromptConfirm(label string) bool {
 	prompt := promptui.Prompt{
 		Label:     label,
@@ -72,14 +98,26 @@ func SelectIssues(issues []redmine.Issue) []redmine.Issue {
 
 		// Hiển thị danh sách đã chọn nếu có
 		if len(selected) > 0 {
-			fmt.Println("💎 Tickets trong giỏ hàng:")
+			fmt.Println("💎 TICKETS IN CART:")
+			fmt.Println("┌─────────┬─────────────────────────────────────────────────────────────────┐")
+			fmt.Println("│ TICKET  │ TITLE                                                           │")
+			fmt.Println("├─────────┼─────────────────────────────────────────────────────────────────┤")
 			for _, sel := range selected {
-				fmt.Printf("   🛒 #%d - %s\n", sel.ID, sel.Title)
+				title := sel.Title
+				if len(title) > 65 {
+					title = title[:62] + "..."
+				}
+				fmt.Printf("│ #%-6d │ %-63s │\n", sel.ID, title)
 			}
-			fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+			fmt.Println("└─────────┴─────────────────────────────────────────────────────────────────┘")
 		}
 
-		// Hiển thị danh sách issues với status đã chọn
+		// Hiển thị danh sách issues với format đẹp hơn
+		fmt.Println("\n📋 ALL TICKETS (✅ = selected, ⬜ = not selected):")
+		fmt.Println("┌─────┬─────────┬─────────────────────────────────────────────────────────────┐")
+		fmt.Println("│ SEL │ TICKET  │ TITLE                                                       │")
+		fmt.Println("├─────┼─────────┼─────────────────────────────────────────────────────────────┤")
+		
 		var items []string
 		for _, issue := range issues {
 			status := "⬜"
@@ -89,18 +127,27 @@ func SelectIssues(issues []redmine.Issue) []redmine.Issue {
 					break
 				}
 			}
-			items = append(items, fmt.Sprintf("%s #%d - %s", status, issue.ID, issue.Title))
+			
+			title := issue.Title
+			if len(title) > 59 {
+				title = title[:56] + "..."
+			}
+			
+			displayLine := fmt.Sprintf("│ %s │ #%-6d │ %-59s │", status, issue.ID, title)
+			items = append(items, displayLine)
 		}
-		items = append(items, "🚀 Xong rồi! Ship đi thôi!")
+		
+		items = append(items, "│ 🚀  │ FINISH  │ DONE - PROCEED TO STATUS SELECTION                     │")
 
 		prompt := promptui.Select{
-			Label:     "💫 Chọn ticket nào để bỏ vào giỏ (Enter để add/remove)",
+			Label:     "\n💫 Select a ticket to add/remove from selection (↑↓ navigate, Enter to toggle)",
 			Items:     items,
-			CursorPos: currentIndex, // Set cursor position
+			CursorPos: currentIndex,
+			Size:      12, // Show more items at once
 			Templates: &promptui.SelectTemplates{
-				Active:   "👉 {{ . | cyan }}",
+				Active:   "👉 {{ . | cyan | bold }}",
 				Inactive: "   {{ . }}",
-				Selected: "✨ {{ . | green }}",
+				Selected: "✨ {{ . | green | bold }}",
 			},
 		}
 
@@ -137,15 +184,29 @@ func SelectIssues(issues []redmine.Issue) []redmine.Issue {
 		// Continue immediately without pause
 	}
 
-	// Final summary
+	// Final summary with improved formatting
 	fmt.Print("\033[2J\033[H")
-	fmt.Printf("🎊 YAS QUEEN! Đã chọn %d tickets để update nè!\n", len(selected))
+	fmt.Printf("╔═══════════════════════════════════════════════════════════════════════════╗\n")
+	fmt.Printf("║                          🎊 SELECTION COMPLETE!                          ║\n")
+	fmt.Printf("║                        Selected %d tickets for update                     ║\n", len(selected))
+	fmt.Printf("╚═══════════════════════════════════════════════════════════════════════════╝\n")
+	
 	if len(selected) > 0 {
-		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		fmt.Println("\n🎯 FINAL SELECTION:")
+		fmt.Println("┌─────────┬─────────────────────────────────────────────────────────────────┐")
+		fmt.Println("│ TICKET  │ TITLE                                                           │")
+		fmt.Println("├─────────┼─────────────────────────────────────────────────────────────────┤")
 		for _, sel := range selected {
-			fmt.Printf("   🎯 #%d - %s\n", sel.ID, sel.Title)
+			title := sel.Title
+			if len(title) > 65 {
+				title = title[:62] + "..."
+			}
+			fmt.Printf("│ #%-6d │ %-63s │\n", sel.ID, title)
 		}
-		fmt.Println("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+		fmt.Println("└─────────┴─────────────────────────────────────────────────────────────────┘")
+		fmt.Println("\n🚀 Ready to proceed to status selection!")
+	} else {
+		fmt.Println("\n⚠️  No tickets selected. The operation will be cancelled.")
 	}
 
 	return selected
