@@ -1,8 +1,8 @@
 class RedmineTools < Formula
   desc "Command-line tool for working with Redmine projects"
-  homepage "https://github.com/vfa-khuongdv/redmine-tools"
-  url "https://github.com/vfa-khuongdv/redmine-tools/archive/v1.0.0.tar.gz"
-  sha256 "0019dfc4b32d63c1392aa264aed2253c1e0c2fb09216f8e2cc269bbfb8bb49b5"
+  homepage "https://github.com/vfa-khuongdv/homebrew-redmine-tools"
+  url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/archive/v1.0.0.tar.gz"
+  sha256 "bd0afde162f74c0c7ef164a34728b42726f399226b1a44bfde82cb534cdec07d"
   license "MIT"
 
   depends_on "go" => :build
