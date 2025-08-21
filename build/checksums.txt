@@ -1,0 +1,5 @@
+26b5488a908b18e27b8e420beeda70ff73f5d9bc7442a045999e813faaab8a3e  redmine-tools-darwin-amd64.tar.gz
+f2fffa2473a4fd1defad5e9962f65202cabe629207e74264b63e262c96c5487b  redmine-tools-darwin-arm64.tar.gz
+6799eaeb30b5851605a9849b5953f97edfae4208be9fc08a6b6ec20d036e6cb3  redmine-tools-linux-amd64.tar.gz
+815e8c2d3a0aa2f3007a52eb86a17c448435e6461032b24761d464100d80f990  redmine-tools-linux-arm64.tar.gz
+dd0dbdbde5b16f875958cf6d33cfb3dea519c4d822537dd7a3c890a1a1b88148  redmine-tools-windows-amd64.zip

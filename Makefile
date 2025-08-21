@@ -34,7 +34,7 @@ release:
 		echo "Building for $(GOOS)/$(GOARCH)..." && \
 		GOOS=$(GOOS) GOARCH=$(GOARCH) go build \
 			-ldflags "-X main.version=$(VERSION)" \
-			-o $(BUILD_DIR)/$(BINARY_NAME)-$(GOOS)-$(GOARCH)$(EXTENSION) ./cmd && \
+			-o $(BUILD_DIR)/$(BINARY_NAME)-$(GOOS)-$(GOARCH)$(EXTENSION) ./cmd; \
 	)
 
 # Install locally
