@@ -28,11 +28,16 @@ jobs:
       run: |
         make release VERSION=${{ steps.get_version.outputs.VERSION }}
         make archives VERSION=${{ steps.get_version.outputs.VERSION }}
+        
+        # Generate checksums
+        cd build
+        sha256sum *.tar.gz *.zip > checksums.txt
+        cat checksums.txt
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
       with:
-        files: build/*.tar.gz,build/*.zip
+        files: build/*.tar.gz,build/*.zip,build/checksums.txt
         generate_release_notes: true
         draft: false
         prerelease: false
@@ -41,37 +46,65 @@ jobs:
 
     - name: Update Homebrew formula
       if: startsWith(github.ref, 'refs/tags/v')
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Calculate SHA256 for macOS ARM64 binary (most common for Homebrew)
-        SHA256=$(shasum -a 256 build/redmine-tools-darwin-arm64.tar.gz | cut -d ' ' -f 1)
-        echo "SHA256: $SHA256"
+        # Clone the homebrew tap repo
+        git clone https://github.com/vfa-khuongdv/homebrew-redmine-tools.git homebrew-tap
+        cd homebrew-tap
         
         # Create formula update script
         cat > update_formula.sh << 'EOF'
         #!/bin/bash
         REPO="vfa-khuongdv/homebrew-redmine-tools"
         VERSION="${{ steps.get_version.outputs.VERSION }}"
-        SHA256="$1"
         
-        # Clone the homebrew tap repo
-        git clone https://github.com/$REPO.git homebrew-tap
-        cd homebrew-tap
+        # Download all release assets to get SHA256 checksums
+        gh release download ${VERSION} --repo ${REPO} --pattern "*.tar.gz" --pattern "checksums.txt"
+        
+        # Extract SHA256 values from checksums file
+        DARWIN_ARM64_SHA256=$(grep "redmine-tools-darwin-arm64.tar.gz" checksums.txt | cut -d ' ' -f 1)
+        DARWIN_AMD64_SHA256=$(grep "redmine-tools-darwin-amd64.tar.gz" checksums.txt | cut -d ' ' -f 1)
+        LINUX_ARM64_SHA256=$(grep "redmine-tools-linux-arm64.tar.gz" checksums.txt | cut -d ' ' -f 1)
+        LINUX_AMD64_SHA256=$(grep "redmine-tools-linux-amd64.tar.gz" checksums.txt | cut -d ' ' -f 1)
         
         # Update the formula
         cat > redmine-tools.rb << EOL
         class RedmineTools < Formula
           desc "Command-line tool for working with Redmine projects"
-          homepage "https://github.com/vfa-khuongdv/redmine-tools"
-          url "https://github.com/vfa-khuongdv/redmine-tools/releases/download/${VERSION}/redmine-tools-darwin-arm64.tar.gz"
-          sha256 "${SHA256}"
+          homepage "https://github.com/vfa-khuongdv/homebrew-redmine-tools"
           version "${VERSION#v}"
+          license "MIT"
+        
+          on_macos do
+            if Hardware::CPU.arm?
+              url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/${VERSION}/redmine-tools-darwin-arm64.tar.gz"
+              sha256 "${DARWIN_ARM64_SHA256}"
+            end
+            if Hardware::CPU.intel?
+              url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/${VERSION}/redmine-tools-darwin-amd64.tar.gz"
+              sha256 "${DARWIN_AMD64_SHA256}"
+            end
+          end
+        
+          on_linux do
+            if Hardware::CPU.arm? && Hardware::CPU.arch_64_bit?
+              url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/${VERSION}/redmine-tools-linux-arm64.tar.gz"
+              sha256 "${LINUX_ARM64_SHA256}"
+            end
+            if Hardware::CPU.intel?
+              url "https://github.com/vfa-khuongdv/homebrew-redmine-tools/releases/download/${VERSION}/redmine-tools-linux-amd64.tar.gz"
+              sha256 "${LINUX_AMD64_SHA256}"
+            end
+          end
         
           def install
-            bin.install "redmine-tools-darwin-arm64" => "redmine-tools"
+            bin.install Dir["redmine-tools-*"].first => "redmine-tools"
           end
         
           test do
-            system "#{bin}/redmine-tools", "--version"
+            output = shell_output("#{bin}/redmine-tools --version")
+            assert_match "redmine-tools version #{version}", output
           end
         end
         EOL
@@ -85,4 +118,5 @@ jobs:
         EOF
         
         chmod +x update_formula.sh
-        echo "Formula update script created. SHA256: $SHA256"
+        ./update_formula.sh
+        echo "Formula updated successfully"
