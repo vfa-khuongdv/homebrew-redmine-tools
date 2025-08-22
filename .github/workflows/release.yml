@@ -32,7 +32,17 @@ jobs:
         # Generate checksums
         cd build
         sha256sum *.tar.gz *.zip > checksums.txt
+        echo "Generated checksums:"
         cat checksums.txt
+        
+        # Verify that required files exist
+        for file in redmine-tools-darwin-arm64.tar.gz redmine-tools-darwin-amd64.tar.gz redmine-tools-linux-arm64.tar.gz redmine-tools-linux-amd64.tar.gz; do
+          if [ ! -f "$file" ]; then
+            echo "Error: Required file $file not found"
+            ls -la
+            exit 1
+          fi
+        done
 
     - name: Create Release
       uses: softprops/action-gh-release@v1
@@ -49,8 +59,20 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
+        # Install GitHub CLI if not available
+        if ! command -v gh &> /dev/null; then
+          sudo apt-get update
+          sudo apt-get install -y gh
+        fi
+        
+        # Authenticate GitHub CLI
+        echo "$GITHUB_TOKEN" | gh auth login --with-token
+        
         # Configure git with token for authentication
         git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
+        
+        # Wait for release to be available
+        sleep 30
         
         # Clone the homebrew tap repo
         git clone https://github.com/vfa-khuongdv/homebrew-redmine-tools.git homebrew-tap
@@ -69,11 +91,25 @@ jobs:
         # Download all release assets to get SHA256 checksums
         gh release download ${VERSION} --repo ${REPO} --pattern "*.tar.gz" --pattern "checksums.txt"
         
-        # Extract SHA256 values from checksums file
-        DARWIN_ARM64_SHA256=$(grep "redmine-tools-darwin-arm64.tar.gz" checksums.txt | cut -d ' ' -f 1)
-        DARWIN_AMD64_SHA256=$(grep "redmine-tools-darwin-amd64.tar.gz" checksums.txt | cut -d ' ' -f 1)
-        LINUX_ARM64_SHA256=$(grep "redmine-tools-linux-arm64.tar.gz" checksums.txt | cut -d ' ' -f 1)
-        LINUX_AMD64_SHA256=$(grep "redmine-tools-linux-amd64.tar.gz" checksums.txt | cut -d ' ' -f 1)
+        # Extract SHA256 values from checksums file (ensure we get only the hash part)
+        DARWIN_ARM64_SHA256=$(grep "redmine-tools-darwin-arm64.tar.gz" checksums.txt | awk '{print $1}')
+        DARWIN_AMD64_SHA256=$(grep "redmine-tools-darwin-amd64.tar.gz" checksums.txt | awk '{print $1}')
+        LINUX_ARM64_SHA256=$(grep "redmine-tools-linux-arm64.tar.gz" checksums.txt | awk '{print $1}')
+        LINUX_AMD64_SHA256=$(grep "redmine-tools-linux-amd64.tar.gz" checksums.txt | awk '{print $1}')
+        
+        # Validate that we got the SHA256 values
+        if [ -z "$DARWIN_ARM64_SHA256" ] || [ -z "$DARWIN_AMD64_SHA256" ] || [ -z "$LINUX_ARM64_SHA256" ] || [ -z "$LINUX_AMD64_SHA256" ]; then
+          echo "Error: Could not extract all SHA256 values from checksums.txt"
+          cat checksums.txt
+          exit 1
+        fi
+        
+        # Debug: Print extracted SHA256 values
+        echo "Extracted SHA256 values:"
+        echo "Darwin ARM64: $DARWIN_ARM64_SHA256"
+        echo "Darwin AMD64: $DARWIN_AMD64_SHA256"
+        echo "Linux ARM64: $LINUX_ARM64_SHA256"
+        echo "Linux AMD64: $LINUX_AMD64_SHA256"
         
         # Update the formula
         cat > redmine-tools.rb << EOL
