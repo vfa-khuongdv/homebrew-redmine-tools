@@ -78,13 +78,16 @@ jobs:
         # Wait for release to be available
         sleep 30
         
-        # Clone the homebrew tap repo
-        git clone https://github.com/vfa-khuongdv/homebrew-redmine-tools.git homebrew-tap
+        # Clone the homebrew tap repo with token authentication
+        git clone https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/vfa-khuongdv/homebrew-redmine-tools.git homebrew-tap
         cd homebrew-tap
         
         # Set up git user for commits
         git config user.name "GitHub Actions"
         git config user.email "actions@github.com"
+        
+        # Configure git to use the token for HTTPS authentication
+        git config url."https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/".insteadOf "https://github.com/"
         
         # Create formula update script
         cat > update_formula.sh << 'EOF'
