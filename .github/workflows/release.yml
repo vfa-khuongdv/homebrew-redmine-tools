@@ -75,18 +75,6 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        # Install GitHub CLI if not available
-        if ! command -v gh &> /dev/null; then
-          sudo apt-get update
-          sudo apt-get install -y gh
-        fi
-        
-        # Authenticate GitHub CLI
-        echo "$GITHUB_TOKEN" | gh auth login --with-token
-        
-        # Configure git with token for authentication
-        git config --global url."https://x-access-token:${GITHUB_TOKEN}@github.com/".insteadOf "https://github.com/"
-        
         # Wait for release to be available
         sleep 30
         
