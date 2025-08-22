@@ -57,11 +57,12 @@ archives: release
 	@echo "Creating release archives..."
 	@cd $(BUILD_DIR) && \
 	for binary in redmine-tools-*; do \
-		if [[ "$$binary" == *".exe" ]]; then \
-			zip "$${binary%.exe}.zip" "$$binary"; \
-		else \
-			tar -czf "$$binary.tar.gz" "$$binary"; \
-		fi; \
+		case "$$binary" in \
+			*.exe) \
+				zip "$${binary%.exe}.zip" "$$binary" ;; \
+			*) \
+				tar -czf "$$binary.tar.gz" "$$binary" ;; \
+		esac; \
 	done
 
 # Help

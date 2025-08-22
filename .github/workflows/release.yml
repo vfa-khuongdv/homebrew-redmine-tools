@@ -27,20 +27,36 @@ jobs:
     - name: Build binaries
       run: |
         make release VERSION=${{ steps.get_version.outputs.VERSION }}
+        echo "Files after release build:"
+        ls -la build/
         make archives VERSION=${{ steps.get_version.outputs.VERSION }}
+        echo "Files after creating archives:"
+        ls -la build/
         
-        # Generate checksums
+        # Generate checksums for all archive files that exist
         cd build
-        sha256sum *.tar.gz *.zip > checksums.txt
+        # Initialize empty checksums file
+        > checksums.txt
+        # Generate checksums for all archive files that exist
+        if ls *.tar.gz 1> /dev/null 2>&1; then
+          sha256sum *.tar.gz >> checksums.txt
+        fi
+        if ls *.zip 1> /dev/null 2>&1; then
+          sha256sum *.zip >> checksums.txt
+        fi
         echo "Generated checksums:"
         cat checksums.txt
         
         # Verify that required files exist
+        echo "Verifying required archive files exist:"
         for file in redmine-tools-darwin-arm64.tar.gz redmine-tools-darwin-amd64.tar.gz redmine-tools-linux-arm64.tar.gz redmine-tools-linux-amd64.tar.gz; do
           if [ ! -f "$file" ]; then
             echo "Error: Required file $file not found"
+            echo "Available files:"
             ls -la
             exit 1
+          else
+            echo "✓ Found $file"
           fi
         done
 
